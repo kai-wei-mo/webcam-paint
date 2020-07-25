@@ -78,7 +78,7 @@ def get_contour_points(img):
     """Takes HSV mask and returns x and y coordinates for the top-middle of a contoured object.
     This function recognizes rectangles with a mild degree of flexibility from GaussianBlur."""
     x, y, w, h = 0, 0, 0, 0
-    # img = cv2.GaussianBlur(img, (5, 5), 1)
+    
     # retrieves only the extreme outer contours
     _, thresh = cv2.threshold(img, 40, 255, 0)
 
