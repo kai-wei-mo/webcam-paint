@@ -7,55 +7,46 @@ import numpy as np
 
 class SliderGUI:
     def __init__(self):
-        """Create GUI with 6 Scale objects (for HSV color range) and a respective color chooser button.
+        """Create GUI with 6 Scale objects (for HSV color range) and a respective color chooser.
         Include SAVE and DONE buttons."""
 
         self.is_done = False
         self.color_hex = '#000000'
 
-        self.label1 = Label(master, text="min_hue")
-        self.label2 = Label(master, text="max_hue")
-        self.label3 = Label(master, text="min_sat")
-        self.label4 = Label(master, text="max_sat")
-        self.label5 = Label(master, text="min_val")
-        self.label6 = Label(master, text="max_val")
-        self.hue1 = Scale(master, from_=0, to=179, length=500, orient=HORIZONTAL)
-        self.hue2 = Scale(master, from_=0, to=179, length=500, orient=HORIZONTAL)
-        self.sat1 = Scale(master, from_=0, to=255, length=500, orient=HORIZONTAL)
-        self.sat2 = Scale(master, from_=0, to=255, length=500, orient=HORIZONTAL)
-        self.val1 = Scale(master, from_=0, to=255, length=500, orient=HORIZONTAL)
-        self.val2 = Scale(master, from_=0, to=255, length=500, orient=HORIZONTAL)
+        self.labels = []
+        self.labels.append(Label(master, text="min_hue"))
+        self.labels.append(Label(master, text="max_hue"))
+        self.labels.append(Label(master, text="min_sat"))
+        self.labels.append(Label(master, text="max_sat"))
+        self.labels.append(Label(master, text="min_val"))
+        self.labels.append(Label(master, text="max_val"))
+
+        self.scales = []
+        self.scales.extend(Scale(master, from_=0, to=179, length=500, orient=HORIZONTAL) for _ in range(2))
+        self.scales.extend(Scale(master, from_=0, to=255, length=500, orient=HORIZONTAL) for _ in range(4))
+
         self.color_sample = Label(master, bg=self.color_hex)
         self.color_button = Button(master, text="PICK COLOR", command=lambda: self.choose_color())
         self.save_button = Button(master, text="SAVE", command=lambda: self.save_color())
         self.done_button = Button(master, text="DONE", command=lambda: self.update_done())
 
         # default values of Scales
-        self.hue1.set(0)
-        self.hue2.set(179)
-        self.sat1.set(0)
-        self.sat2.set(255)
-        self.val1.set(0)
-        self.val2.set(255)
+        self.scales[0].set(0)
+        self.scales[1].set(179)
+        self.scales[2].set(0)
+        self.scales[3].set(255)
+        self.scales[4].set(0)
+        self.scales[5].set(255)
 
-        self.label1.grid(row=0, column=0, padx=4, pady=4)
-        self.label2.grid(row=1, column=0, padx=4, pady=4)
-        self.label3.grid(row=2, column=0, padx=4, pady=4)
-        self.label4.grid(row=3, column=0, padx=4, pady=4)
-        self.label5.grid(row=4, column=0, padx=4, pady=4)
-        self.label6.grid(row=5, column=0, padx=4, pady=4)
+        # pack elements to master
+        for j in range(6):
+            self.labels[j].grid(row=j, column=0, padx=4, pady=4)
+            self.scales[j].grid(row=j, column=1)
 
-        self.hue1.grid(row=0, column=1)
-        self.hue2.grid(row=1, column=1)
-        self.sat1.grid(row=2, column=1)
-        self.sat2.grid(row=3, column=1)
-        self.val1.grid(row=4, column=1)
-        self.val2.grid(row=5, column=1)
-
-        self.color_sample.grid(row=1, column=2, pady=4, sticky=W + E + N + S)
-        self.color_button.grid(row=3, column=2, pady=4, sticky=W + E + N + S)
-        self.save_button.grid(row=4, column=2, pady=4, sticky=W + E + N + S)
-        self.done_button.grid(row=5, column=2, pady=4, sticky=W + E + N + S)
+        self.color_sample.grid(row=1, column=2, pady=4, sticky=N + S + E + W)
+        self.color_button.grid(row=3, column=2, pady=4, sticky=N + S + E + W)
+        self.save_button.grid(row=4, column=2, pady=4, sticky=N + S + E + W)
+        self.done_button.grid(row=5, column=2, pady=4, sticky=N + S + E + W)
 
     def choose_color(self):
         """Store the hexadecimal value of the user-chosen color.
@@ -64,13 +55,15 @@ class SliderGUI:
         self.color_hex = color_code[1]
         self.color_sample.config(bg=self.color_hex)
 
+    def get_scale_values(self):
+        """Returns the values of the 6 Scales as one list."""
+        # [min_hue, max_hue, min_sat, max_sat, min_val, max_val]
+        return [x.get() for x in self.scales]
+
     def save_color(self):
         """Save the hexadecimal color value and the 6 Scale values into a .txt file."""
-        list_of_values = [self.hue1.get(), self.hue2.get(),
-                          self.sat1.get(), self.sat2.get(),
-                          self.val1.get(), self.val2.get()]
-
-        data = [self.color_hex, list_of_values]
+        scale_values = self.get_scale_values()
+        data = [self.color_hex, scale_values]
         with open('colors.txt', 'a') as file:
             file.write(str(data) + '\n')
         file.close()
@@ -90,7 +83,7 @@ master.title('Color Selection')
 master.geometry('675x275')
 master.protocol("WM_DELETE_WINDOW", do_nothing)  # user cannot use [X] to exit
 
-sliders = SliderGUI()
+win = SliderGUI()
 camera = cv2.VideoCapture(0)  # default camera, uses machine's backend
 
 if not camera.isOpened():
@@ -98,7 +91,7 @@ if not camera.isOpened():
     sys.exit()
 
 while True:
-    if sliders.is_done:
+    if win.is_done:
         break
 
     ret, frame = camera.read()
@@ -107,28 +100,21 @@ while True:
     master.update_idletasks()
     master.update()
 
-    # update the 6 values that determine HSV color range
-    min_hue = sliders.hue1.get()
-    max_hue = sliders.hue2.get()
-    min_sat = sliders.sat1.get()
-    max_sat = sliders.sat2.get()
-    min_val = sliders.val1.get()
-    max_val = sliders.val2.get()
+    # [min_hue, max_hue, min_sat, max_sat, min_val, max_val]
+    values = win.get_scale_values()
 
-    # if min greater than max, set min equal to max
-    if min_hue > max_hue:
-        sliders.hue1.set(sliders.hue2.get())
-    if min_sat > max_sat:
-        sliders.sat1.set(sliders.sat2.get())
-    if min_val > max_val:
-        sliders.val1.set(sliders.val2.get())
+    for i in range(0, 2, 6):
+        # if min_xxx greater than max_xxx, set min_xxx equal to max_xxx
+        if values[i] > values[i + 1]:
+            win.scales[i].set(win.scales[i + 1].get())
 
-    # find range of HSV color, to be used for mask transformations
-    lower_range = np.array([min_hue, min_sat, min_val])
-    upper_range = np.array([max_hue, max_sat, max_val])
+    # find HSV color ranges used for mask transformations
+    lower_range = np.array([values[0], values[2], values[4]])
+    upper_range = np.array([values[1], values[3], values[5]])
 
-    # if frame capture is successful, use frame to find HSV to create mask
+    # if video capture is successful
     if ret:
+        # use frame to create HSV to create mask
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, lower_range, upper_range)
 
