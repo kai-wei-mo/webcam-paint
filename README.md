@@ -1,6 +1,7 @@
 # Webcam Paint
 
 This application uses the OpenCV library to track objects of chosen colors and draw colored lines.
+![Webcam Paint Demo GIF](webcam-paint-demo.gif)
 
 ### Table of Contents
 
